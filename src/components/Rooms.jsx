@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -27,17 +28,24 @@ export default function Rooms() {
           </div>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((r) => (
-            <div key={r.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          {rooms.map((r, idx) => (
+            <motion.div
+              key={r.id}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: idx * 0.05 }}
+              className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
               {r.images?.[0] && (
-                <img src={r.images[0]} alt={r.name} className="w-full h-44 object-cover" />
+                <motion.img src={r.images[0]} alt={r.name} className="w-full h-44 object-cover" initial={{ scale: 1.06 }} whileInView={{ scale: 1 }} transition={{ duration: 0.8 }} />
               )}
               <div className="p-5">
                 <h3 className="text-white text-lg font-semibold">{r.name}</h3>
                 <p className="text-white/70 text-sm mt-1">{r.room_type} • Sleeps {r.capacity}</p>
                 <p className="text-white mt-4 text-xl">${r.price_per_night.toLocaleString()} <span className="text-white/60 text-sm">/ night</span></p>
               </div>
-            </div>
+            </motion.div>
           ))}
           {rooms.length === 0 && (
             <div className="text-white/70">No rooms added yet.</div>

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import BookingModal from "./BookingModal";
+import AnimatedCard from "./AnimatedCard";
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -14,6 +17,7 @@ export default function Availability() {
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState(null);
 
   const fetchAvailability = async () => {
     setLoading(true);
@@ -42,7 +46,7 @@ export default function Availability() {
   return (
     <section id="availability" className="relative py-14">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur">
+        <AnimatedCard className="p-6 backdrop-blur">
           <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm text-white/70 mb-2">Check-in</label>
@@ -57,33 +61,52 @@ export default function Availability() {
               <input type="number" min={1} max={12} className="w-full bg-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-white/30" value={guests} onChange={(e) => setGuests(parseInt(e.target.value || 1))} />
             </div>
             <div className="md:col-span-2 flex items-end gap-3">
-              <button onClick={fetchAvailability} className="w-full md:w-auto px-6 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-white/90 transition">
+              <motion.button whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.02 }} onClick={fetchAvailability} className="w-full md:w-auto px-6 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-white/90 transition">
                 {loading ? "Checking..." : "Check availability"}
-              </button>
+              </motion.button>
               {error && <span className="text-rose-300 text-sm">{error}</span>}
             </div>
           </div>
-        </div>
+        </AnimatedCard>
 
         <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((r) => (
-            <div key={r.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-              {r.images?.[0] && (
-                <img src={r.images[0]} alt={r.name} className="w-full h-44 object-cover" />
-              )}
-              <div className="p-5">
-                <h3 className="text-white text-lg font-semibold">{r.name}</h3>
-                <p className="text-white/70 text-sm mt-1">Sleeps {r.capacity} • {r.beds} beds</p>
-                <p className="text-white mt-4 text-xl">${r.price_per_night.toLocaleString()} <span className="text-white/60 text-sm">/ night</span></p>
-                <a href={`#book-${r.id}`} className="mt-4 inline-block px-4 py-2 rounded-lg bg-white text-slate-900">Book now</a>
-              </div>
-            </div>
-          ))}
+          <AnimatePresence>
+            {rooms.map((r, idx) => (
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.05 }}
+                className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+              >
+                {r.images?.[0] && (
+                  <motion.img src={r.images[0]} alt={r.name} className="w-full h-44 object-cover" initial={{ scale: 1.06 }} whileInView={{ scale: 1 }} transition={{ duration: 0.8 }} />
+                )}
+                <div className="p-5">
+                  <h3 className="text-white text-lg font-semibold">{r.name}</h3>
+                  <p className="text-white/70 text-sm mt-1">Sleeps {r.capacity} • {r.beds} beds</p>
+                  <p className="text-white mt-4 text-xl">${r.price_per_night.toLocaleString()} <span className="text-white/60 text-sm">/ night</span></p>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setSelected(r)} className="mt-4 inline-block px-4 py-2 rounded-lg bg-white text-slate-900">
+                    Book now
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {!loading && rooms.length === 0 && (
             <div className="text-white/70">No rooms available for these dates.</div>
           )}
         </div>
       </div>
+
+      <BookingModal
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        room={selected}
+        dates={{ checkIn, checkOut }}
+        guests={guests}
+      />
     </section>
   );
 }
